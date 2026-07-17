@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>공부요정 - 초등 학습앱</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app" id="app">
+
+  <div class="topbar">
+    <div class="brand">공부<span>요정</span></div>
+    <div class="topbar-actions" id="topbarActions" style="display:none;">
+      <button class="icon-btn" onclick="goToRecords()">📒 기록</button>
+      <button class="icon-btn" onclick="goToProfileSelect()">👤 전환</button>
+    </div>
+  </div>
+
+  <!-- 1. 프로필 선택 화면 -->
+  <div class="screen active" id="screen-profile">
+    <div class="section-title">누가 공부할까요?</div>
+    <div class="section-sub">프로필을 선택하거나 새로 만들어 주세요</div>
+    <div class="profile-list" id="profileList"></div>
+
+    <div class="new-profile-box">
+      <label>학교</label>
+      <input type="text" id="newProfileSchool" placeholder="OO초등학교" maxlength="20">
+
+      <label>학년</label>
+      <select id="newProfileGrade">
+        <option value="1">1학년</option>
+        <option value="2">2학년</option>
+        <option value="3" selected>3학년</option>
+        <option value="4">4학년</option>
+        <option value="5">5학년</option>
+        <option value="6">6학년</option>
+      </select>
+
+      <div class="field-row">
+        <div>
+          <label>반</label>
+          <input type="number" id="newProfileClass" placeholder="예: 3" min="1" max="20">
+        </div>
+        <div>
+          <label>번</label>
+          <input type="number" id="newProfileNumber" placeholder="예: 12" min="1" max="50">
+        </div>
+      </div>
+
+      <label>이름</label>
+      <input type="text" id="newProfileRealName" placeholder="본명을 입력하세요" maxlength="10">
+
+      <label>프로필명</label>
+      <input type="text" id="newProfileNickname" placeholder="앱에서 보여질 별명" maxlength="8">
+
+      <button class="btn btn-primary mt-16" onclick="createProfile()">프로필 만들기</button>
+    </div>
+  </div>
+
+  <!-- 2. 홈 화면 -->
+  <div class="screen" id="screen-home">
+    <div class="section-title" id="homeGreeting">안녕하세요!</div>
+    <div class="section-sub">오늘은 무엇을 공부할까요?</div>
+
+    <div class="subject-grid">
+      <div class="subject-card math" onclick="goToDifficulty('math')">
+        <div class="subj-emoji">➕</div>
+        <div class="subj-name">수학</div>
+        <div class="subj-desc">덧셈 · 뺄셈 · 곱셈 · 나눗셈</div>
+      </div>
+      <div class="subject-card korean" onclick="goToDifficulty('korean')">
+        <div class="subj-emoji">🔤</div>
+        <div class="subj-name">국어 낱말게임</div>
+        <div class="subj-desc">초성을 보고 낱말을 맞혀요</div>
+      </div>
+      <div class="subject-card english" onclick="goToDifficulty('english')">
+        <div class="subj-emoji">🔠</div>
+        <div class="subj-name">영어 단어</div>
+        <div class="subj-desc">영어 단어의 뜻을 맞혀요</div>
+      </div>
+      <div class="subject-card game" onclick="goToDifficulty('gugudan')">
+        <div class="subj-emoji">🎮</div>
+        <div class="subj-name">구구단 게임</div>
+        <div class="subj-desc">빠르게 구구단을 풀어봐요</div>
+      </div>
+    </div>
+
+    <div class="sticker-strip" id="stickerStrip"></div>
+  </div>
+
+  <!-- 3. 난이도 선택 화면 -->
+  <div class="screen" id="screen-difficulty">
+    <div class="section-title" id="diffTitle">난이도 선택</div>
+    <div class="section-sub">1단계(쉬움) ~ 5단계(어려움) 중에 골라보세요</div>
+    <div class="level-grid" id="levelGrid"></div>
+    <button class="btn btn-outline mt-16" onclick="goToHome()">◀ 홈으로</button>
+  </div>
+
+  <!-- 4. 설정 화면 (학습시간 / 문제수) -->
+  <div class="screen" id="screen-setup">
+    <div class="section-title">학습 방법 선택</div>
+    <div class="section-sub">시간을 정해서 풀까요, 문제 수를 정해서 풀까요?</div>
+
+    <div class="setup-toggle">
+      <div class="setup-option selected" id="setupModeTime" onclick="selectSetupMode('time')">⏱ 시간으로 정하기</div>
+      <div class="setup-option" id="setupModeCount" onclick="selectSetupMode('count')">🔢 문제 수로 정하기</div>
+    </div>
+
+    <div id="setupTimeBox">
+      <div class="section-sub" style="margin-bottom:0;">공부할 시간 (분)</div>
+      <div class="setup-number-row">
+        <button onclick="changeSetupValue(-1)">−</button>
+        <div class="setup-number-value" id="setupTimeValue">5</div>
+        <button onclick="changeSetupValue(1)">+</button>
+      </div>
+    </div>
+    <div id="setupCountBox" class="hidden">
+      <div class="section-sub" style="margin-bottom:0;">풀 문제 수</div>
+      <div class="setup-number-row">
+        <button onclick="changeSetupValue(-1)">−</button>
+        <div class="setup-number-value" id="setupCountValue">10</div>
+        <button onclick="changeSetupValue(1)">+</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary mt-16" onclick="startQuiz()">시작하기 🚀</button>
+    <button class="btn btn-outline mt-16" onclick="goToDifficultyBack()">◀ 뒤로</button>
+  </div>
+
+  <!-- 5. 퀴즈 화면 -->
+  <div class="screen" id="screen-quiz">
+    <div class="quiz-progress"><div class="quiz-progress-bar" id="quizProgressBar"></div></div>
+    <div class="quiz-timer" id="quizTimer"></div>
+
+    <div class="quiz-card">
+      <div class="quiz-question" id="quizQuestion">문제</div>
+      <div class="quiz-hint" id="quizHint"></div>
+    </div>
+
+    <div id="quizInputArea"></div>
+    <div class="quiz-feedback" id="quizFeedback"></div>
+  </div>
+
+  <!-- 6. 결과 화면 -->
+  <div class="screen" id="screen-result">
+    <div class="result-hero">
+      <div class="result-emoji" id="resultEmoji">🎉</div>
+      <div class="result-score" id="resultScore">0 / 0</div>
+      <div class="result-detail" id="resultDetail"></div>
+      <div class="result-stickers" id="resultStickers"></div>
+    </div>
+    <div class="btn-block-group">
+      <button class="btn btn-primary" onclick="goToHome()">홈으로 가기</button>
+      <button class="btn btn-outline" onclick="retrySameSetup()">한 번 더 풀기</button>
+    </div>
+  </div>
+
+  <!-- 7. 기록 화면 -->
+  <div class="screen" id="screen-records">
+    <div class="section-title">내 학습 기록</div>
+    <div class="record-summary" id="recordSummary"></div>
+    <div class="record-log" id="recordLog"></div>
+    <button class="btn btn-outline mt-16" onclick="goToHome()">◀ 홈으로</button>
+  </div>
+
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
