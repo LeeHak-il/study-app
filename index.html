@@ -100,9 +100,28 @@
         <div class="subj-name">구구단 게임</div>
         <div class="subj-desc">빠르게 구구단을 풀어봐요</div>
       </div>
+      <div class="subject-card mascot" onclick="goToMascotChat()">
+        <div class="subj-emoji">🧚</div>
+        <div class="subj-name">요정이와 대화하기</div>
+        <div class="subj-desc">힘들 때, 심심할 때 말 걸어보세요</div>
+      </div>
     </div>
 
     <div class="sticker-strip" id="stickerStrip"></div>
+  </div>
+
+  <!-- 2-1. 요정이 챗봇 화면 -->
+  <div class="screen" id="screen-mascot">
+    <div class="section-title">🧚 요정이와 대화하기</div>
+    <div class="section-sub">궁금한 거나 하고 싶은 말을 걸어보세요!</div>
+
+    <div class="chat-window" id="chatWindow"></div>
+    <div class="chat-quick-replies" id="chatQuickReplies"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="메시지를 입력하세요" maxlength="60" onkeydown="if(event.key==='Enter') sendMascotMessage()">
+      <button class="btn btn-primary" id="chatSendBtn" onclick="sendMascotMessage()">보내기</button>
+    </div>
+    <button class="btn btn-outline mt-16" onclick="goToHome()">◀ 홈으로</button>
   </div>
 
   <!-- 3. 난이도 선택 화면 -->
