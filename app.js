@@ -287,6 +287,81 @@ function renderStickers() {
   }
 }
 
+/* ---------- 요정이 챗봇 (규칙 기반, 실제 AI 아님) ---------- */
+var MASCOT_QUICK_REPLIES = ["안녕!", "심심해", "오늘 뭐 할까?", "스티커 몇 개야?", "수학 어려워"];
+
+function goToMascotChat() {
+  var win = document.getElementById("chatWindow");
+  win.innerHTML = "";
+  appendChatBubble("mascot", currentProfile.nickname + "야, 안녕! 나는 공부요정이야 🧚 오늘 하고 싶은 말을 걸어봐!");
+  renderMascotQuickReplies();
+  document.getElementById("chatInput").value = "";
+  showScreen("screen-mascot");
+  setTimeout(function () {
+    var input = document.getElementById("chatInput");
+    if (input) input.focus();
+  }, 50);
+}
+function renderMascotQuickReplies() {
+  var box = document.getElementById("chatQuickReplies");
+  box.innerHTML = "";
+  MASCOT_QUICK_REPLIES.forEach(function (text) {
+    var chip = document.createElement("div");
+    chip.className = "chat-quick-reply";
+    chip.textContent = text;
+    chip.onclick = function () { sendMascotMessage(text); };
+    box.appendChild(chip);
+  });
+}
+function appendChatBubble(role, text) {
+  var win = document.getElementById("chatWindow");
+  var bubble = document.createElement("div");
+  bubble.className = "chat-bubble " + role;
+  bubble.textContent = text;
+  win.appendChild(bubble);
+  win.scrollTop = win.scrollHeight;
+}
+function sendMascotMessage(presetText) {
+  var input = document.getElementById("chatInput");
+  var text = (presetText !== undefined ? presetText : input.value).trim();
+  if (!text) return;
+  appendChatBubble("user", text);
+  input.value = "";
+  var reply = getMascotReply(text);
+  setTimeout(function () { appendChatBubble("mascot", reply); }, 400);
+}
+function getMascotReply(text) {
+  var lower = text.toLowerCase();
+
+  // 동적 응답: 스티커 개수, 오늘 추천 과목
+  for (var i = 0; i < MASCOT_DYNAMIC_KEYWORDS.sticker.length; i++) {
+    if (lower.indexOf(MASCOT_DYNAMIC_KEYWORDS.sticker[i]) !== -1) {
+      var count = getStickerCount(currentProfile.id);
+      return "지금까지 모은 스티커는 " + count + "개야! " + (count > 0 ? "정말 잘하고 있어 ⭐" : "오늘부터 하나씩 모아보자!");
+    }
+  }
+  for (var j = 0; j < MASCOT_DYNAMIC_KEYWORDS.recommend.length; j++) {
+    if (lower.indexOf(MASCOT_DYNAMIC_KEYWORDS.recommend[j]) !== -1) {
+      var subjects = ["수학", "국어 낱말게임", "영어 단어", "구구단 게임"];
+      var pick = subjects[randInt(0, subjects.length - 1)];
+      return "오늘은 " + pick + " 어때? 홈 화면에서 카드를 눌러서 시작해봐!";
+    }
+  }
+
+  // 카테고리 순서대로 키워드 매칭
+  for (var c = 0; c < MASCOT_CATEGORIES.length; c++) {
+    var cat = MASCOT_CATEGORIES[c];
+    for (var k = 0; k < cat.keywords.length; k++) {
+      if (lower.indexOf(cat.keywords[k]) !== -1) {
+        return cat.replies[randInt(0, cat.replies.length - 1)];
+      }
+    }
+  }
+
+  // 매칭 없으니면 기본 응답
+  return MASCOT_FALLBACK[randInt(0, MASCOT_FALLBACK.length - 1)];
+}
+
 /* ---------- 난이도 선택 화면 ---------- */
 function goToDifficulty(subject) {
   quiz.subject = subject;
