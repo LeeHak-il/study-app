@@ -7,6 +7,8 @@
 var STORAGE_PROFILES = "studyapp_profiles";
 var STORAGE_LAST_PROFILE = "studyapp_lastProfileId";
 var currentProfile = null;
+var newProfilePhotoData = null;   // 새 프로필 생성 시 선택한 사진 (dataURL)
+var photoChangeTargetId = null;   // 기존 프로필 사진 변경 대상 id
 
 var quiz = {
   subject: null,      // 'math' | 'korean' | 'english' | 'gugudan'
@@ -70,6 +72,65 @@ function addStickers(profileId, n) {
   localStorage.setItem("studyapp_stickers_" + profileId, String(cur + n));
 }
 
+/* ---------- 프로필 사진 처리 ---------- */
+function resizeImageFile(file, maxSize, callback) {
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    var img = new Image();
+    img.onload = function () {
+      var w = img.width, h = img.height;
+      if (w > h) {
+        if (w > maxSize) { h = Math.round(h * (maxSize / w)); w = maxSize; }
+      } else {
+        if (h > maxSize) { w = Math.round(w * (maxSize / h)); h = maxSize; }
+      }
+      var canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL("image/jpeg", 0.8));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function handleNewPhotoSelect(inputEl) {
+  var file = inputEl.files && inputEl.files[0];
+  if (!file) return;
+  resizeImageFile(file, 200, function (dataUrl) {
+    newProfilePhotoData = dataUrl;
+    var preview = document.getElementById("newPhotoPreview");
+    preview.innerHTML = '<img src="' + dataUrl + '" alt="프로필 사진 미리보기">';
+    document.getElementById("newPhotoRemoveBtn").classList.remove("hidden");
+  });
+}
+function removeNewPhoto() {
+  newProfilePhotoData = null;
+  document.getElementById("newPhotoPreview").innerHTML = "👤";
+  document.getElementById("newPhotoRemoveBtn").classList.add("hidden");
+  document.getElementById("newProfilePhoto").value = "";
+}
+function changeProfilePhoto(id, event) {
+  event.stopPropagation();
+  photoChangeTargetId = id;
+  document.getElementById("profilePhotoChangeInput").click();
+}
+function handleExistingPhotoSelect(inputEl) {
+  var file = inputEl.files && inputEl.files[0];
+  if (!file || !photoChangeTargetId) return;
+  resizeImageFile(file, 200, function (dataUrl) {
+    var profiles = loadProfiles();
+    var p = profiles.filter(function (x) { return x.id === photoChangeTargetId; })[0];
+    if (p) {
+      p.photo = dataUrl;
+      saveProfiles(profiles);
+      renderProfileList();
+    }
+    photoChangeTargetId = null;
+    inputEl.value = "";
+  });
+}
+
 /* ---------- 프로필 화면 ---------- */
 function renderProfileList() {
   var profiles = loadProfiles();
@@ -87,9 +148,28 @@ function renderProfileList() {
     card.className = "profile-card";
     card.onclick = function () { selectProfile(p.id); };
 
-    var avatar = document.createElement("div");
-    avatar.className = "profile-avatar";
-    avatar.textContent = p.nickname.charAt(0);
+    var avatarWrap = document.createElement("div");
+    avatarWrap.className = "profile-avatar-wrap";
+
+    var avatar;
+    if (p.photo) {
+      avatar = document.createElement("img");
+      avatar.className = "profile-avatar has-photo";
+      avatar.src = p.photo;
+      avatar.alt = p.nickname;
+    } else {
+      avatar = document.createElement("div");
+      avatar.className = "profile-avatar";
+      avatar.textContent = p.nickname.charAt(0);
+    }
+    avatarWrap.appendChild(avatar);
+
+    var editBtn = document.createElement("button");
+    editBtn.className = "avatar-edit-btn";
+    editBtn.type = "button";
+    editBtn.textContent = "✎";
+    editBtn.onclick = function (e) { changeProfilePhoto(p.id, e); };
+    avatarWrap.appendChild(editBtn);
 
     var meta = document.createElement("div");
     meta.className = "profile-meta";
@@ -111,7 +191,7 @@ function renderProfileList() {
     del.textContent = "삭제";
     del.onclick = function (e) { e.stopPropagation(); deleteProfile(p.id); };
 
-    card.appendChild(avatar);
+    card.appendChild(avatarWrap);
     card.appendChild(meta);
     card.appendChild(del);
     box.appendChild(card);
@@ -139,6 +219,7 @@ function createProfile() {
     number: number ? parseInt(number, 10) : null,
     realName: realName,
     nickname: nickname,
+    photo: newProfilePhotoData,
     createdAt: Date.now()
   });
   saveProfiles(profiles);
@@ -149,6 +230,7 @@ function createProfile() {
   document.getElementById("newProfileRealName").value = "";
   document.getElementById("newProfileNickname").value = "";
   document.getElementById("newProfileGrade").value = "3";
+  removeNewPhoto();
 
   selectProfile(id);
 }
@@ -183,6 +265,12 @@ function goToProfileSelect() {
 function goToHome() {
   document.getElementById("homeGreeting").textContent =
     currentProfile.nickname + "님, 안녕하세요! (" + currentProfile.school + " " + currentProfile.grade + "학년)";
+  var homeAvatar = document.getElementById("homeAvatar");
+  if (currentProfile.photo) {
+    homeAvatar.innerHTML = '<img src="' + currentProfile.photo + '" alt="' + currentProfile.nickname + '">';
+  } else {
+    homeAvatar.textContent = currentProfile.nickname.charAt(0);
+  }
   renderStickers();
   showScreen("screen-home");
 }
