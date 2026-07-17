@@ -21,6 +21,7 @@ var quiz = {
   endAt: null,         // time 모드일 때 종료 시각(ms)
   timerHandle: null,
   currentProblem: null,
+  currentSpeakText: null, // 영어 단어 발음 듣기용 텍스트
   usedWords: [],
   awaitingNext: false
 };
@@ -358,7 +359,7 @@ function getMascotReply(text) {
     }
   }
 
-  // 매칭 없으니면 기본 응답
+  // 매칭 없으면 기본 응답
   return MASCOT_FALLBACK[randInt(0, MASCOT_FALLBACK.length - 1)];
 }
 
@@ -498,7 +499,10 @@ function nextProblem() {
   var inputArea = document.getElementById("quizInputArea");
   var hintEl = document.getElementById("quizHint");
   var qEl = document.getElementById("quizQuestion");
+  var speakBtn = document.getElementById("speakWordBtn");
   hintEl.textContent = "";
+  speakBtn.classList.add("hidden");
+  quiz.currentSpeakText = null;
 
   if (quiz.subject === "math") {
     var p = generateMathProblem(quiz.level);
@@ -521,11 +525,24 @@ function nextProblem() {
     var ebank = ENGLISH_WORDS[quiz.level];
     var epick = pickUnusedWord(ebank, "word");
     quiz.currentProblem = { answer: epick.meaning };
+    quiz.currentSpeakText = epick.word;
     qEl.textContent = epick.word;
     hintEl.textContent = "이 영어 단어의 뜻은 무엇일까요?";
+    speakBtn.classList.remove("hidden");
     var choices = buildChoices(epick.meaning, ENGLISH_WORDS);
     renderChoiceInput(inputArea, choices);
   }
+}
+function speakCurrentWord() {
+  if (!quiz.currentSpeakText) return;
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  try {
+    window.speechSynthesis.cancel();
+    var utter = new SpeechSynthesisUtterance(quiz.currentSpeakText);
+    utter.lang = "en-US";
+    utter.rate = 0.9;
+    window.speechSynthesis.speak(utter);
+  } catch (e) { /* 음성 합성을 지원하지 않는 기기는 조용히 무시 */ }
 }
 function pickUnusedWord(bank, key) {
   var remaining = bank.filter(function (w) { return quiz.usedWords.indexOf(w[key]) === -1; });
