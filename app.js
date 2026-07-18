@@ -701,7 +701,7 @@ function goToRecords() {
   var summary = document.getElementById("recordSummary");
   summary.innerHTML =
     '<div class="record-box"><div class="num">' + totalSessions + '</div><div class="lbl">학습 횟수</div></div>' +
-    '<div class="record-box"><div class="num">' + totalProblems + '</div><div class="lbl">푸 문제 수</div></div>' +
+    '<div class="record-box"><div class="num">' + totalProblems + '</div><div class="lbl">푼 문제 수</div></div>' +
     '<div class="record-box"><div class="num">' + avgAcc + '%</div><div class="lbl">평균 정답률</div></div>' +
     '<div class="record-box"><div class="num">' + getStickerCount(currentProfile.id) + '</div><div class="lbl">획득 스티커</div></div>';
 
