@@ -11,7 +11,7 @@ var newProfilePhotoData = null;   // 새 프로필 생성 시 선택한 사진 (
 var photoChangeTargetId = null;   // 기존 프로필 사진 변경 대상 id
 
 var quiz = {
-  subject: null,      // 'math' | 'korean' | 'english' | 'gugudan'
+  subject: null,      // 'math' | 'korean' | 'sentence' | 'english' | 'gugudan'
   level: null,        // 1~5
   mode: null,         // 'time' | 'count'
   targetValue: null,  // 분 또는 문제수
@@ -29,6 +29,7 @@ var quiz = {
 var SUBJECT_LABEL = {
   math: "수학",
   korean: "국어 낱말게임",
+  sentence: "국어 문장",
   english: "영어 단어",
   gugudan: "구구단 게임"
 };
@@ -503,6 +504,7 @@ function nextProblem() {
   hintEl.textContent = "";
   speakBtn.classList.add("hidden");
   quiz.currentSpeakText = null;
+  qEl.classList.remove("small");
 
   if (quiz.subject === "math") {
     var p = generateMathProblem(quiz.level);
@@ -521,6 +523,25 @@ function nextProblem() {
     qEl.textContent = getChosungHint(pick.word);
     hintEl.textContent = "힌트: " + pick.hint;
     renderTextInput(inputArea, "낱말을 입력하세요");
+  } else if (quiz.subject === "sentence") {
+    if (quiz.level <= 2) {
+      var sbank = SENTENCE_FILL_BLANK[quiz.level];
+      var spick = pickUnusedWord(sbank, "sentence");
+      quiz.currentProblem = { answer: spick.answers };
+      qEl.classList.add("small");
+      qEl.textContent = spick.sentence;
+      hintEl.textContent = "빈칸에 알맞은 낱말을 써보세요";
+      renderTextInput(inputArea, "정답을 입력하세요");
+    } else {
+      var stbank = SENTENCE_SITUATIONS[quiz.level];
+      var stpick = pickUnusedWord(stbank, "situation");
+      quiz.currentProblem = { answer: stpick.answer };
+      qEl.classList.add("small");
+      qEl.textContent = stpick.situation;
+      hintEl.textContent = "가장 알맞은 행동을 골라보세요";
+      var stchoices = shuffleArray(stpick.choices);
+      renderChoiceInput(inputArea, stchoices);
+    }
   } else if (quiz.subject === "english") {
     var ebank = ENGLISH_WORDS[quiz.level];
     var epick = pickUnusedWord(ebank, "word");
@@ -581,6 +602,8 @@ function submitTextAnswer() {
   var isCorrect;
   if (typeof correctAns === "number") {
     isCorrect = parseInt(raw, 10) === correctAns;
+  } else if (Array.isArray(correctAns)) {
+    isCorrect = correctAns.indexOf(raw) !== -1;
   } else {
     isCorrect = raw === correctAns;
   }
@@ -603,11 +626,12 @@ function handleAnswerResult(isCorrect, correctAns) {
   quiz.total += 1;
   if (isCorrect) quiz.correct += 1;
   var fb = document.getElementById("quizFeedback");
+  var displayAns = Array.isArray(correctAns) ? correctAns[0] : correctAns;
   if (isCorrect) {
     fb.textContent = "정답이에요! 🎉";
     fb.className = "quiz-feedback ok";
   } else {
-    fb.textContent = "아쉬워요! 정답은 " + correctAns + " 예요";
+    fb.textContent = "아쉬워요! 정답은 " + displayAns + " 예요";
     fb.className = "quiz-feedback no";
   }
   if (quiz.mode === "count") updateProgressBarCount();
